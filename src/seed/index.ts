@@ -126,6 +126,9 @@ async function main() {
     process.exit(0)
   }
 
+  // A previous run that stopped half-way leaves stores and categories behind; clear them first.
+  if (!fresh && (await payload.count({ collection: 'stores', overrideAccess: true })).totalDocs > 0) await wipe(payload)
+
   payload.logger.info('Seeding stores and delivery zones…')
   const store1 = await payload.create({
     collection: 'stores',

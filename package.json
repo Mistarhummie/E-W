@@ -19,7 +19,7 @@
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/index.ts",
     "import:products": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/import-products.ts",
     "build:deploy": "cross-env NODE_OPTIONS=--no-deprecation payload migrate && npm run seed && npm run build",
-    "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create"
+    "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation BLOB_READ_WRITE_TOKEN=vercel_blob_rw_schema_placeholder payload migrate:create"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.91.0",
