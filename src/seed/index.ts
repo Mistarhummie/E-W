@@ -5,8 +5,6 @@
  *   npm run seed            (only fills an empty database)
  *   npm run seed -- --fresh (wipes catalogue content first; never orders or customers)
  */
-import crypto from 'node:crypto'
-
 import { getPayload, type Payload } from 'payload'
 import sharp from 'sharp'
 
@@ -115,6 +113,11 @@ async function wipe(payload: Payload) {
 }
 
 async function main() {
+  // On Vercel the build runs the seed; it only loads demo content when SEED_DEMO=true.
+  if (process.env.VERCEL && process.env.SEED_DEMO !== 'true') {
+    console.log('SEED_DEMO is not true; skipping demo content.')
+    process.exit(0)
+  }
   const payload = await getPayload({ config })
   if (fresh) await wipe(payload)
   const existing = await payload.count({ collection: 'products', overrideAccess: true })
@@ -397,18 +400,20 @@ async function main() {
   await payload.create({ collection: 'discount-codes', overrideAccess: true, data: { code: 'KARIBU10', type: 'percent', value: 10, description: '10% off your first order', onePerCustomer: true, active: true } })
   await payload.create({ collection: 'discount-codes', overrideAccess: true, data: { code: 'FREEPRINT', type: 'freePrinting', description: 'Free name & number printing', active: true, minOrder: 3000 } })
 
-  const ownerEmail = process.env.SEED_OWNER_EMAIL || 'owner@eastwest.ke'
-  const ownerPassword = process.env.SEED_OWNER_PASSWORD || crypto.randomBytes(9).toString('base64url')
+  // The owner login is only created when both are set (never a default password).
+  // Otherwise the first account made at /admin becomes the owner.
+  const ownerEmail = process.env.SEED_OWNER_EMAIL
+  const ownerPassword = process.env.SEED_OWNER_PASSWORD
   const owners = await payload.count({ collection: 'users', where: { role: { equals: 'owner' } }, overrideAccess: true })
-  if (!owners.totalDocs) {
+  if (!owners.totalDocs && ownerEmail && ownerPassword) {
     await payload.create({
       collection: 'users',
       overrideAccess: true,
       data: { email: ownerEmail, password: ownerPassword, name: 'EastWest Owner', role: 'owner', store: store1.id },
     })
-    payload.logger.info(
-      `Owner account: ${ownerEmail}${process.env.SEED_OWNER_PASSWORD ? '' : ` / password ${ownerPassword}`} (change the password after first login)`,
-    )
+    payload.logger.info(`Owner account created: ${ownerEmail}`)
+  } else if (!owners.totalDocs) {
+    payload.logger.info('No owner yet: open /admin and create the first account, which becomes the owner.')
   }
 
   payload.logger.info('Seed complete.')

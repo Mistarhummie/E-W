@@ -23,7 +23,7 @@ npm run seed                  # sample catalogue, stores, blog posts and an owne
 npm run dev                   # http://localhost:3000 and http://localhost:3000/admin
 ```
 
-The seed creates the owner account from `SEED_OWNER_EMAIL` and `SEED_OWNER_PASSWORD` (defaults to `owner@eastwest.ke` with a starter password printed by the seed). **Change the password on first login.** `npm run seed -- --fresh` wipes and re-creates the sample catalogue.
+If `SEED_OWNER_EMAIL` and `SEED_OWNER_PASSWORD` are set, the seed also creates the owner login; otherwise create it at `/admin` (the first account becomes the owner). `npm run seed -- --fresh` wipes and re-creates the sample catalogue.
 
 With `DEMO_MODE=true` and no payment keys, checkout shows a "Test mode: mark as paid" button and login codes appear on screen instead of by SMS. Turn it off in production.
 
@@ -59,10 +59,14 @@ All keys live in Vercel → Project → Settings → Environment Variables, neve
 ## Deploy to Vercel
 
 1. Create the Vercel, Neon (Postgres) and Daraja/Paystack/Africa's Talking accounts in EastWest's business email.
-2. Import this repository in Vercel, add the environment variables above, and add **Vercel Blob** storage (it sets `BLOB_READ_WRITE_TOKEN`).
-3. Deploy. On the first deploy Payload creates the database tables. Then open `/admin` and create the owner account (the first account created becomes the owner).
-4. Add the stores, delivery zones, badges and settings in the admin, and import the products.
-5. Point the `eastwest.ke` domain at Vercel (needs the registrar login).
+2. Import this repository in Vercel and set **Build Command** to `npm run build:deploy`. It applies database migrations (`src/migrations`), runs the seed, then builds.
+3. Add a **Neon** database and **Vercel Blob** storage to the project (they set `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN`), plus the environment variables above. Pick a European region (Frankfurt) for the database and functions: it is the closest to Kenya.
+4. For a demo site set `SEED_DEMO=true` and `DEMO_MODE=true`. For the real shop leave both unset, so no sample products are loaded and test payments are off.
+5. Deploy, open `/admin` and create the owner account straight away (the first account created becomes the owner).
+6. Add the stores, delivery zones, badges and settings in the admin, and import the products.
+7. Point the `eastwest.ke` domain at Vercel (needs the registrar login).
+
+After changing a collection, run `npm run migrate:create -- <name>` and commit the new file in `src/migrations`.
 
 ## Useful commands
 

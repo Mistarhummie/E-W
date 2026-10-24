@@ -75,7 +75,9 @@ export default buildConfig({
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL || '' },
-    push: process.env.NODE_ENV !== 'production',
+    // Local development syncs the schema automatically. Deployed sites use the migrations in
+    // src/migrations, applied by `npm run build:deploy` before each build.
+    push: !process.env.VERCEL && process.env.NODE_ENV !== 'production',
   }),
   email: smtpReady
     ? nodemailerAdapter({
