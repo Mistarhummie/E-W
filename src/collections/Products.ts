@@ -206,13 +206,24 @@ export const Products: CollectionConfig = {
               defaultValue: false,
             },
             {
+              name: 'leagueBadges',
+              type: 'checkbox',
+              label: "Offer the league's badges",
+              defaultValue: true,
+              admin: {
+                condition: (data) => Boolean(data?.customisable),
+                description: 'Adds every badge linked to this jersey’s league (Catalogue → Badges), e.g. the Premier League, No Room for Racism and Champions League badges.',
+              },
+            },
+            {
               name: 'badges',
               type: 'relationship',
               relationTo: 'badges',
               hasMany: true,
+              label: 'Extra badges',
               admin: {
                 condition: (data) => Boolean(data?.customisable),
-                description: 'Badges offered on this shirt. Leave empty for name and number only.',
+                description: 'Badges for this shirt only, e.g. a champions badge on the title winner’s shirt.',
               },
             },
             {

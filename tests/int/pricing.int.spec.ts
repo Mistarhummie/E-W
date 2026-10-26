@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { describe, expect, it } from 'vitest'
 
+import { pickBadges } from '@/lib/badges'
 import { evaluateDiscount, type DiscountLine } from '@/lib/discounts'
 import { formatPhone, isKenyanMobile, normalisePhone } from '@/lib/phone'
 import { percentOff, printPriceFor, unitPriceFor, wasPriceFor } from '@/lib/pricing'
@@ -25,6 +26,18 @@ describe('pricing', () => {
     expect(wasPriceFor(jersey)).toBe(3000)
     expect(wasPriceFor({ ...jersey, saleEndsAt: '2020-01-01' })).toBeNull()
     expect(percentOff(2500, 3000)).toBe(17)
+  })
+
+  it('keeps one league badge, one competition badge and any campaign badges', () => {
+    const chosen = [
+      { id: 1, group: 'league' as const },
+      { id: 2, group: 'league' as const },
+      { id: 3, group: 'competition' as const },
+      { id: 4, group: 'competition' as const },
+      { id: 5, group: 'extra' as const },
+      { id: 6, group: 'extra' as const },
+    ]
+    expect(pickBadges(chosen).map((b) => b.id)).toEqual([1, 3, 5, 6])
   })
 
   it('charges name, number and each badge', () => {

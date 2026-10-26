@@ -3,7 +3,7 @@
 The new eastwest.ke: a fast, server-rendered shop for football jerseys and gym wear, with an admin for the EastWest team.
 
 - **Shop:** home, jerseys (JD Sports-style layout with deal countdowns), gym wear (Gymshark-style), kids, search and filters, wishlist.
-- **Jersey customisation:** name, number, font and badges on every eligible shirt, with a live preview on the back of the shirt. Prices come from the admin.
+- **Jersey customisation:** name, number, font and sleeve badges, with a live preview on the back of the shirt. Badges are linked to leagues, so every jersey gets its league's set automatically (e.g. Premier League, No Room for Racism, Champions League); champions badges are added on the winning club's shirts. Prices come from the admin.
 - **Checkout:** M-Pesa (Daraja STK push), cards (Paystack), pay at pickup; pickup at either store or delivery anywhere in Kenya by zone; free delivery over KSH 10,000.
 - **Accounts:** phone + SMS code, email + password, or Google; guest checkout. Customers can download or delete their data (Data Protection Act).
 - **Discount codes:** % off, KSH off, free delivery, free printing, buy X get Y, influencer codes with usage and revenue reports, gift vouchers, automatic offers.
@@ -39,6 +39,12 @@ npm run import:products -- ./products.csv --hidden   # hidden until reviewed in 
 Columns: `title, price, compare_at_price, section, category, club, season, gender, description, images, customisable, size_group, legacy_url`. Only `title`, `price` and `category` are required. `images` is a list of image URLs separated by `|`. Re-running updates matching products instead of duplicating them. Products without a photo stay off the site until one is added.
 
 `legacy_url` is the product's old address (for example `/product/arsenal-home-jersey`). Visitors and Google following the old link are sent to the new page with a permanent redirect.
+
+## Badges
+
+Admin → Badges holds the sleeve badges. Each badge has a group (league or champions badge: pick one; competition: pick one; campaign such as No Room for Racism: pick any) and the leagues it applies to. A customisable jersey offers every active badge linked to its league, plus any **Extra badges** chosen on the product (used for champions badges). Untick **Offer the league's badges** on a product to offer only its extra badges.
+
+The demo seed creates the 2025/26 set with placeholder pictures; upload the real badge photos in the admin.
 
 ## Settings (environment variables)
 

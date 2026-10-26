@@ -12,8 +12,8 @@ import { SectionHeading } from '../../../../components/ui/SectionHeading'
 import { SIZE_GROUPS } from '../../../../lib/catalogue'
 import { mediaUrl } from '../../../../lib/media'
 import { percentOff, unitPriceFor, wasPriceFor } from '../../../../lib/pricing'
-import { getProduct, getProducts, getSettings } from '../../../../lib/queries'
-import type { Badge, Category, Media, Product } from '../../../../payload-types'
+import { getProduct, getProductBadges, getProducts, getSettings } from '../../../../lib/queries'
+import type { Category, Media, Product } from '../../../../payload-types'
 
 type Params = { params: Promise<{ slug: string }> }
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Params) {
   const { slug } = await params
-  const [product, settings] = await Promise.all([getProduct(slug), getSettings()])
+  const [product, settings, badges] = await Promise.all([getProduct(slug), getSettings(), getProductBadges(slug)])
   if (!product || !product.hasImage) notFound()
 
   const category = typeof product.category === 'object' ? (product.category as Category) : null
@@ -65,9 +65,7 @@ export default async function ProductPage({ params }: Params) {
     preorder: Boolean(product.preorder),
     shipsBy: product.shipsBy,
     customisable: Boolean(product.customisable),
-    badges: (product.badges ?? [])
-      .filter((b): b is Badge => typeof b === 'object' && Boolean(b.active))
-      .map((b) => ({ id: b.id, name: b.name, price: b.price, group: b.group })),
+    badges: badges.map((b) => ({ id: b.id, name: b.name, price: b.price, group: b.group, image: mediaUrl(b.image, 'thumb') })),
     namePrice: settings.namePrice ?? 200,
     numberPrice: settings.numberPrice ?? 200,
     backImage: mediaUrl(product.backImage, 'large'),

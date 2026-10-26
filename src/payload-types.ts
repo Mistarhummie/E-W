@@ -440,7 +440,11 @@ export interface Product {
   shipsBy?: string | null;
   customisable?: boolean | null;
   /**
-   * Badges offered on this shirt. Leave empty for name and number only.
+   * Adds every badge linked to this jersey’s league (Catalogue → Badges), e.g. the Premier League, No Room for Racism and Champions League badges.
+   */
+  leagueBadges?: boolean | null;
+  /**
+   * Badges for this shirt only, e.g. a champions badge on the title winner’s shirt.
    */
   badges?: (number | Badge)[] | null;
   /**
@@ -562,7 +566,7 @@ export interface Media {
   };
 }
 /**
- * Sleeve badges customers can add to a jersey. Choose which badges apply on each product.
+ * Sleeve badges customers can add to a jersey. A badge linked to a league is offered on every customisable jersey in that league; champions badges are added on the winning club’s products.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "badges".
@@ -570,8 +574,15 @@ export interface Media {
 export interface Badge {
   id: number;
   name: string;
-  group: 'league' | 'competition';
+  group: 'league' | 'competition' | 'extra';
+  /**
+   * Offer this badge on every customisable jersey in these leagues. Leave empty for club-specific badges.
+   */
+  leagues?: (number | Category)[] | null;
   price: number;
+  /**
+   * Square picture of the badge, shown in the customiser.
+   */
   image?: (number | null) | Media;
   active?: boolean | null;
   sortOrder?: number | null;
@@ -1062,6 +1073,7 @@ export interface ProductsSelect<T extends boolean = true> {
   preorder?: T;
   shipsBy?: T;
   customisable?: T;
+  leagueBadges?: T;
   badges?: T;
   nameColour?: T;
   tags?: T;
@@ -1113,6 +1125,7 @@ export interface CategoriesSelect<T extends boolean = true> {
 export interface BadgesSelect<T extends boolean = true> {
   name?: T;
   group?: T;
+  leagues?: T;
   price?: T;
   image?: T;
   active?: T;

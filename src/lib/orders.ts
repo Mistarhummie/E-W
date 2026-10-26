@@ -3,7 +3,8 @@ import 'server-only'
 import crypto from 'node:crypto'
 import type { Payload } from 'payload'
 
-import type { Badge, Category, Order, Product } from '../payload-types'
+import type { Category, Order, Product } from '../payload-types'
+import { badgesForProduct, pickBadges } from './badges'
 import { cleanPrintName, cleanPrintNumber, FONTS, NAME_PATTERN, NUMBER_PATTERN, SIZE_GROUPS } from './catalogue'
 import { bestAutomatic, evaluateDiscount, findCode, type DiscountLine, type DiscountResult } from './discounts'
 import { normalisePhone } from './phone'
@@ -110,12 +111,8 @@ export async function quote(payload: Payload, input: QuoteInput): Promise<Quote>
       const number = cleanPrintNumber(input_.print.number ?? '')
       if (name && !NAME_PATTERN.test(name)) errors.push(`The name on ${product.title} can only use letters.`)
       if (number && !NUMBER_PATTERN.test(number)) errors.push(`The number on ${product.title} must be 0–99.`)
-      const allowed = (product.badges ?? []).filter((b): b is Badge => typeof b === 'object' && Boolean(b?.active))
-      const chosen = allowed.filter((b) => (input_.print?.badgeIds ?? []).map(String).includes(String(b.id)))
-      // One badge per group (league / competition).
-      const byGroup = new Map<string, Badge>()
-      for (const b of chosen) if (!byGroup.has(b.group)) byGroup.set(b.group, b)
-      const badges = [...byGroup.values()]
+      const allowed = await badgesForProduct(payload, product)
+      const badges = pickBadges(allowed.filter((b) => (input_.print?.badgeIds ?? []).map(String).includes(String(b.id))))
       const font = FONTS.some((f) => f.value === input_.print?.font) ? input_.print!.font! : 'league'
       if (name || number || badges.length) {
         printPrice = printPriceFor(

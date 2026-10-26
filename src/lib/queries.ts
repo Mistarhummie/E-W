@@ -3,6 +3,7 @@ import 'server-only'
 import { unstable_cache } from 'next/cache'
 import type { Where } from 'payload'
 
+import { badgesForProduct } from './badges'
 import { getPayloadClient } from './payload'
 
 const DAY = 60 * 60 * 24
@@ -221,4 +222,13 @@ export const getFooterPages = unstable_cache(
     ).docs,
   ['footer-pages'],
   { tags: ['pages'], revalidate: DAY },
+)
+
+export const getProductBadges = unstable_cache(
+  async (slug: string) => {
+    const product = await getProduct(slug)
+    return product ? badgesForProduct(await getPayloadClient(), product) : []
+  },
+  ['product-badges'],
+  { tags: ['catalogue'], revalidate: DAY },
 )

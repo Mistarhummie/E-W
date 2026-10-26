@@ -93,3 +93,13 @@ export function bannerSvg(opts: { from: string; to: string; kit?: Kit; words?: s
 }
 
 export type { Kit }
+
+/** Placeholder sleeve badge: a shield in the competition's colours with its short name. */
+export function badgeSvg(label: string, colour: string, ink = '#ffffff', gold = false) {
+  const size = label.length > 4 ? 46 : label.length > 2 ? 58 : 72
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="400" height="400">
+  <path d="M100 8 L180 36 L172 120 Q160 168 100 192 Q40 168 28 120 L20 36 Z" fill="${gold ? '#C9A227' : '#ffffff'}"/>
+  <path d="M100 20 L168 44 L161 118 Q151 158 100 179 Q49 158 39 118 L32 44 Z" fill="${colour}"/>
+  <text x="100" y="${118 + size * 0.05}" font-family="Arial Black, Arial" font-weight="900" font-size="${size}" text-anchor="middle" fill="${ink}">${label}</text>
+</svg>`
+}

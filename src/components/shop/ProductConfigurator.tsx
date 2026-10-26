@@ -11,6 +11,14 @@ import { Price } from '../ui/Price'
 import { useCart } from './CartProvider'
 import { ShirtPreview } from './ShirtPreview'
 
+type BadgeGroup = 'league' | 'competition' | 'extra'
+
+const BADGE_GROUPS: { group: BadgeGroup; label: string }[] = [
+  { group: 'league', label: 'League badge (pick one)' },
+  { group: 'competition', label: 'Competition badge (pick one)' },
+  { group: 'extra', label: 'Campaign badges (pick any)' },
+]
+
 export type ConfigProduct = PricedProduct & {
   id: number | string
   slug: string
@@ -22,7 +30,7 @@ export type ConfigProduct = PricedProduct & {
   preorder: boolean
   shipsBy?: string | null
   customisable: boolean
-  badges: { id: number | string; name: string; price: number; group: 'league' | 'competition' }[]
+  badges: { id: number | string; name: string; price: number; group: BadgeGroup; image?: string | null }[]
   namePrice: number
   numberPrice: number
   backImage: string | null
@@ -40,7 +48,7 @@ export function ProductConfigurator({ product }: { product: ConfigProduct }) {
   const [name, setName] = useState('')
   const [number, setNumber] = useState('')
   const [font, setFont] = useState<string>('league')
-  const [badgeIds, setBadgeIds] = useState<Record<string, string | number | null>>({ league: null, competition: null })
+  const [badgeIds, setBadgeIds] = useState<string[]>([])
   const [confirmed, setConfirmed] = useState(false)
   const [added, setAdded] = useState(false)
 
@@ -52,12 +60,12 @@ export function ProductConfigurator({ product }: { product: ConfigProduct }) {
 
   const price = unitPriceFor(product, edition)
   const was = wasPriceFor(product, edition)
-  const chosenBadges = product.badges.filter((b) => Object.values(badgeIds).map(String).includes(String(b.id)))
+  const chosenBadges = product.badges.filter((b) => badgeIds.includes(String(b.id)))
   const print = custom ? { name: name.trim(), number, font, badgeIds: chosenBadges.map((b) => b.id) } : undefined
   const printPrice = useMemo(
     () => printPriceFor(print, { namePrice: product.namePrice, numberPrice: product.numberPrice }, product.badges),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [custom, name, number, chosenBadges.length, product],
+    [custom, name, number, badgeIds, product],
   )
   const hasPrint = Boolean(custom && (name.trim() || number || chosenBadges.length))
   const sizeStock = size ? stockOf(size) : Infinity
@@ -228,31 +236,44 @@ export function ProductConfigurator({ product }: { product: ConfigProduct }) {
                     </div>
                   </fieldset>
 
-                  {(['league', 'competition'] as const).map((group) => {
+                  {BADGE_GROUPS.map(({ group, label }) => {
                     const options = product.badges.filter((b) => b.group === group)
                     if (!options.length) return null
+                    const many = group === 'extra'
                     return (
                       <fieldset key={group}>
-                        <legend className="label">{group === 'league' ? 'League badge' : 'Competition badge'} (pick one)</legend>
-                        <div className="grid gap-1.5">
+                        <legend className="label">{label}</legend>
+                        <div className="grid gap-1.5" role={many ? 'group' : 'radiogroup'}>
                           {options.map((b) => {
-                            const on = String(badgeIds[group]) === String(b.id)
+                            const id = String(b.id)
+                            const on = badgeIds.includes(id)
+                            const toggle = () =>
+                              setBadgeIds((prev) => {
+                                if (on) return prev.filter((x) => x !== id)
+                                // League and competition: one each, so picking one replaces the other in its group.
+                                const others = many ? prev : prev.filter((x) => product.badges.find((o) => String(o.id) === x)?.group !== group)
+                                return [...others, id]
+                              })
                             return (
                               <button
                                 key={b.id}
                                 type="button"
-                                role="radio"
+                                role={many ? 'checkbox' : 'radio'}
                                 aria-checked={on}
-                                onClick={() => setBadgeIds((prev) => ({ ...prev, [group]: on ? null : b.id }))}
-                                className={cn('flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm transition-all', on ? 'border-ink bg-white shadow-sm' : 'border-line bg-white/60 hover:border-ink/40')}
+                                onClick={toggle}
+                                className={cn('flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm transition-all', on ? 'border-ink bg-white shadow-sm' : 'border-line bg-white/60 hover:border-ink/40')}
                               >
                                 <span className="flex items-center gap-2.5">
-                                  <span className={cn('flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all', on ? 'border-teal bg-teal text-white' : 'border-line')}>
+                                  <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center border-2 transition-all', many ? 'rounded-md' : 'rounded-full', on ? 'border-teal bg-teal text-white' : 'border-line')}>
                                     {on ? <Check className="h-3 w-3" /> : null}
                                   </span>
+                                  {b.image ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={b.image} alt="" width={32} height={32} loading="lazy" className="h-8 w-8 shrink-0 rounded-full object-contain" />
+                                  ) : null}
                                   {b.name}
                                 </span>
-                                <span className="text-xs font-semibold text-teal-dark">+{formatKsh(b.price)}</span>
+                                <span className="shrink-0 text-xs font-semibold text-teal-dark">+{formatKsh(b.price)}</span>
                               </button>
                             )
                           })}

@@ -6,24 +6,14 @@
  *   npm run seed -- --fresh (wipes catalogue content first; never orders or customers)
  */
 import { getPayload, type Payload } from 'payload'
-import sharp from 'sharp'
 
 import config from '../payload.config'
 import type { Product } from '../payload-types'
 import { bannerSvg, gymSvg, jerseySvg, type Kit } from './art'
+import { syncBadges } from './badges'
+import { png } from './upload'
 
 const fresh = process.argv.includes('--fresh')
-
-async function png(svg: string, name: string, payload: Payload, alt: string) {
-  const data = await sharp(Buffer.from(svg)).png().toBuffer()
-  const doc = await payload.create({
-    collection: 'media',
-    data: { alt },
-    file: { data, mimetype: 'image/png', name: `${name}.png`, size: data.length },
-    overrideAccess: true,
-  })
-  return doc.id
-}
 
 const text = (s: string) => ({
   root: {
@@ -85,27 +75,6 @@ const GYM: { title: string; gender: 'men' | 'women'; kind: Parameters<typeof gym
   { title: 'Rest Day Hoodie', gender: 'men', kind: 'hoodie', colour: '#2b2b2b', cat: 'hoodies', training: ['gym', 'running'], price: 3200, tags: ['trending'] },
 ]
 
-const BADGES = [
-  ['Champions League Badge with Foundation', 'competition', 200],
-  ['Europa League Badge with Foundation', 'competition', 200],
-  ['Club World Cup Badge', 'competition', 100],
-  ['Premier League Badge', 'league', 100],
-  ['La Liga Badge', 'league', 100],
-  ['Serie A Badge', 'league', 100],
-  ['Bundesliga Badge', 'league', 100],
-  ['MLS Badge', 'league', 100],
-  ['Carabao Cup Badge', 'competition', 100],
-  ['Conference League Badge', 'competition', 100],
-] as const
-
-const LEAGUE_BADGE: Record<string, string> = {
-  'premier-league': 'Premier League Badge',
-  'la-liga': 'La Liga Badge',
-  'serie-a': 'Serie A Badge',
-  bundesliga: 'Bundesliga Badge',
-  mls: 'MLS Badge',
-}
-
 async function wipe(payload: Payload) {
   for (const collection of ['products', 'categories', 'badges', 'banners', 'posts', 'pages', 'discount-codes', 'stores', 'delivery-zones', 'media'] as const) {
     await payload.delete({ collection, where: { id: { exists: true } }, overrideAccess: true })
@@ -123,6 +92,7 @@ async function main() {
   const existing = await payload.count({ collection: 'products', overrideAccess: true })
   if (existing.totalDocs > 0) {
     payload.logger.info('Products already exist; skipping seed. Use --fresh to reload demo data.')
+    await syncBadges(payload)
     process.exit(0)
   }
 
@@ -167,7 +137,7 @@ async function main() {
     await payload.create({ collection: 'delivery-zones', overrideAccess: true, data: { name, description, fee, eta, sortOrder: i } })
   }
 
-  payload.logger.info('Seeding categories and badges…')
+  payload.logger.info('Seeding categories…')
   const catDefs = [
     ['Premier League', 'premier-league', 'jerseys', { base: '#3D195B', accent: '#00FF85', pattern: 'sash' }],
     ['La Liga', 'la-liga', 'jerseys', { base: '#FF4B44', accent: '#ffffff', pattern: 'plain' }],
@@ -194,21 +164,12 @@ async function main() {
     })
     cats[slug] = doc.id
   }
-  const badgeIds: Record<string, number> = {}
-  for (const [i, [name, group, price]] of BADGES.entries()) {
-    const doc = await payload.create({ collection: 'badges', overrideAccess: true, data: { name, group, price, sortOrder: i } })
-    badgeIds[name] = doc.id
-  }
 
   payload.logger.info('Seeding products…')
   const adult: Size[] = ['S', 'M', 'L', 'XL', '2XL', '3XL']
   for (const [i, j] of JERSEYS.entries()) {
     const front = await png(jerseySvg(j.kit, { crest: j.club.toUpperCase() }), `${j.club}-${i}-front`, payload, `${j.title} front`)
     const back = await png(jerseySvg(j.kit, { back: true }), `${j.club}-${i}-back`, payload, `${j.title} back`)
-    const competition = ['premier-league', 'la-liga', 'serie-a', 'bundesliga', 'ligue-1'].includes(j.league)
-      ? [badgeIds['Champions League Badge with Foundation'], badgeIds['Europa League Badge with Foundation']]
-      : []
-    const league = LEAGUE_BADGE[j.league] ? [badgeIds[LEAGUE_BADGE[j.league]]] : []
     const editions = [
       { name: 'Fan Edition', price: j.price, compareAtPrice: j.was ?? null },
       { name: 'Player Edition', price: j.price + 1000, compareAtPrice: j.was ? j.was + 1000 : null },
@@ -239,7 +200,6 @@ async function main() {
         trackStock: true,
         inventory,
         customisable: true,
-        badges: [...league, ...competition],
         nameColour: ['#ffffff', '#F5E9C9', '#FDE100', '#FCD116', '#F7B5CD'].includes(j.kit.base) ? '#111111' : '#ffffff',
         tags: j.tags ?? [],
         featured: Boolean(j.tags?.includes('top')),
@@ -269,12 +229,13 @@ async function main() {
         trackStock: true,
         inventory: (['4-5Y', '6-7Y', '8-9Y', '10-11Y', '12-13Y'] as Size[]).map((size, i) => ({ size, stock: i + 2 })),
         customisable: true,
-        badges: [badgeIds['Premier League Badge']],
         tags: ['new'],
         status: 'active',
       },
     })
   }
+
+  await syncBadges(payload)
 
   for (const [i, g] of GYM.entries()) {
     const img = await png(gymSvg(g.colour, g.kind), `gym-${i}`, payload, g.title)
