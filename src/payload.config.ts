@@ -35,8 +35,13 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
-    meta: { titleSuffix: ' · EastWest Admin' },
+    meta: {
+      titleSuffix: ' · EastWest Admin',
+      icons: [{ rel: 'icon', type: 'image/png', url: '/brand/icon-32.png' }],
+    },
     avatar: 'default',
+    // The logo has black lettering, so the admin stays in light mode.
+    theme: 'light',
     components: {
       graphics: {
         Logo: '/components/admin/Brand#AdminLogo',

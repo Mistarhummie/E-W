@@ -65,8 +65,9 @@ export function HeaderClient({ nav }: { nav: NavItem[] }) {
           <button className="-ml-2 p-2 lg:hidden" aria-label="Open menu" onClick={() => setMobile(true)}>
             <Menu className="h-6 w-6" />
           </button>
-          <Link href="/" className="text-[22px] transition-opacity hover:opacity-80" aria-label="EastWest Fashions home">
-            <Logo />
+          <Link href="/" className="shrink-0 transition-opacity hover:opacity-80" aria-label="EastWest Fashions home">
+            <Logo variant="compact" className="h-7 sm:hidden" priority />
+            <Logo className="hidden h-10 sm:block lg:h-11" priority />
           </Link>
 
           <nav className="ml-8 hidden h-full items-stretch lg:flex" aria-label="Main">
@@ -211,9 +212,7 @@ function MobileMenu({ open, onClose, nav }: { open: boolean; onClose: () => void
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-line px-4">
-          <span className="text-xl">
-            <Logo />
-          </span>
+          <Logo className="h-8" />
           <button className="p-2" onClick={onClose} aria-label="Close menu">
             <X className="h-6 w-6" />
           </button>

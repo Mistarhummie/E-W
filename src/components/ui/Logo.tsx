@@ -1,23 +1,39 @@
+import Image from 'next/image'
+
 import { cn } from '../../lib/cn'
 
-/** Wordmark built from the brand colours. Replace with the redrawn SVG once approved. */
-export function Logo({ className, inverted = false }: { className?: string; inverted?: boolean }) {
+/**
+ * The approved EastWest logo, cut into layouts from the original artwork (public/brand).
+ * The artwork has black lettering, so on dark backgrounds it sits on a white panel.
+ */
+const VARIANTS = {
+  horizontal: { src: '/brand/logo-horizontal.png', width: 2000, height: 399 },
+  compact: { src: '/brand/logo-horizontal-compact.png', width: 2000, height: 368 },
+  stacked: { src: '/brand/logo-stacked.png', width: 2000, height: 1327 },
+  wordmark: { src: '/brand/logo-wordmark.png', width: 2000, height: 505 },
+  icon: { src: '/brand/logo-icon.png', width: 1066, height: 1066 },
+} as const
+
+export function Logo({
+  variant = 'horizontal',
+  className,
+  priority = false,
+}: {
+  variant?: keyof typeof VARIANTS
+  /** Set the height with a class, e.g. h-9; the width follows. */
+  className?: string
+  priority?: boolean
+}) {
+  const v = VARIANTS[variant]
   return (
-    <span className={cn('inline-flex items-center gap-2 font-brand leading-none select-none', className)}>
-      <svg viewBox="0 0 40 40" className="h-[1.6em] w-[1.6em] shrink-0" aria-hidden>
-        <path d="M5 3 L33 17 L5 31 Z" fill="#02B3AD" />
-        <path d="M20 22 L37 30.5 L20 39 Z" fill={inverted ? '#fff' : '#0b0b0c'} />
-      </svg>
-      <span className="flex flex-col">
-        <span className="text-[1.15em] font-bold tracking-tight">
-          <span className={inverted ? 'text-white' : 'text-ink'}>east</span>
-          <span className="text-teal">west</span>
-        </span>
-        <span className={cn('text-[0.42em] font-medium tracking-[0.42em]', inverted ? 'text-white/70' : 'text-ink/70')}>
-          FASHIONS
-        </span>
-      </span>
-      <span className="sr-only">EastWest Fashions Ke</span>
-    </span>
+    <Image
+      src={v.src}
+      width={v.width}
+      height={v.height}
+      alt="EastWest Fashions Ke"
+      priority={priority}
+      sizes="(max-width: 640px) 200px, 320px"
+      className={cn('h-9 w-auto select-none', className)}
+    />
   )
 }

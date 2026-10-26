@@ -25,8 +25,20 @@ export const metadata: Metadata = {
   title: { default: 'EastWest Fashions Ke | Football Jerseys & Gym Wear in Nairobi', template: '%s | EastWest Fashions Ke' },
   description:
     'Shop football jerseys and gym wear in Kenya. Add your name, number and badges, pay with M-Pesa, and collect in Nairobi or get it delivered countrywide.',
-  openGraph: { type: 'website', siteName: 'EastWest Fashions Ke', locale: 'en_KE' },
-  icons: { icon: '/brand/logo.png' },
+  openGraph: {
+    type: 'website',
+    siteName: 'EastWest Fashions Ke',
+    locale: 'en_KE',
+    images: [{ url: '/brand/og-image.png', width: 1200, height: 630, alt: 'EastWest Fashions' }],
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/brand/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/brand/apple-touch-icon.png',
+  },
 }
 
 export const viewport: Viewport = { themeColor: '#02B3AD', width: 'device-width', initialScale: 1 }

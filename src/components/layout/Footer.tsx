@@ -29,8 +29,8 @@ export async function Footer() {
 
       <div className="container-x grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <span className="text-2xl">
-            <Logo inverted />
+          <span className="inline-block rounded-2xl bg-white px-6 py-5">
+            <Logo variant="stacked" className="h-24" />
           </span>
           <p className="mt-5 max-w-sm text-sm text-white/60">
             Football jerseys and gym wear in Nairobi. Order online, add your name and number, and collect in store or get it delivered anywhere in Kenya.
